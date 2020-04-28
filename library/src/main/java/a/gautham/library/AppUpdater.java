@@ -140,14 +140,14 @@ public class AppUpdater {
 
     }
 
-    class UtilsAsync extends AsyncTask{
+    static class UtilsAsync extends AsyncTask{
 
         private WeakReference<Context> contextRef;
         private String gitUsername, gitRepoName;
         private UpdateListener updateListener;
         private Update update1;
 
-        public UtilsAsync(Context context, String gitUsername, String gitRepoName, UpdateListener updateListener) {
+        UtilsAsync(Context context, String gitUsername, String gitRepoName, UpdateListener updateListener) {
             this.contextRef = new WeakReference<>(context);
             this.gitUsername = gitUsername;
             this.gitRepoName = gitRepoName;
@@ -204,7 +204,7 @@ public class AppUpdater {
                                     assestsModel.getSize(), fileSizeInKB, fileSizeInMB, fileSizeInGb);
                             update1 = update;
 
-                            double currentAppversion = Double.parseDouble(getAppVersion(context));
+                            double currentAppversion = Double.parseDouble(getAppVersion(contextRef.get()));
                             double latestAppversion = Double.parseDouble(releases.getRelease_tag_name());
 
                             updateListener.onSuccess(update,isUpdateAvailable(currentAppversion, latestAppversion));
