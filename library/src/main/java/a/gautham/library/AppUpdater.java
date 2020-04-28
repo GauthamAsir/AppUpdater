@@ -444,7 +444,7 @@ public class AppUpdater {
 
                 File file = new File(contextRef.get().getExternalFilesDir(null).getAbsolutePath()
                         + "/" + app_name);
-                Uri data = FileProvider.getUriForFile(contextRef.get(), "a.gautham.library" +".provider",file);
+                Uri data = FileProvider.getUriForFile(contextRef.get(), contextRef.get().getPackageName() +".provider",file);
 
                 Intent installAPK = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                 installAPK.setDataAndType(data,"application/vnd.android.package-archive");
