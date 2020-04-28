@@ -1,5 +1,6 @@
 package a.gautham.library;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,9 +12,12 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,6 +27,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 import a.gautham.library.helper.ServiceGenerator;
 import a.gautham.library.models.AssestsModel;
@@ -42,7 +47,7 @@ public class AppUpdater {
     private UpdateListener updateListener;
     private UtilsAsync utilsAsync;
     private static final String TAG = "AppUpdater: ";
-    private static DownloadTask downloadTask;
+    public static DownloadTask downloadTask;
     private Display display;
 
     public AppUpdater(Context context) {
@@ -62,8 +67,17 @@ public class AppUpdater {
             public void onSuccess(Update update, boolean isUpdateAvailable) {
                 if (isUpdateAvailable){
 
-                    if (display == Display.DIALOG)
-                        showDialog(update);
+                    switch (display){
+                        case DIALOG:
+                            showDialog(update);
+                            break;
+                        case SNACKBAR:
+                            showSnackBar(update);
+                            break;
+                        case NOTIFICATION:
+                            showNotification(update);
+                            break;
+                    }
 
                 }
             }
@@ -242,7 +256,19 @@ public class AppUpdater {
 
     private void showSnackBar(Update update1) {
 
+        Activity activity = (Activity) context;
 
+        Snackbar snackbar = Snackbar.make(activity.findViewById(android.R.id.content),
+                context.getString(R.string.app_updater_new_update_available), Snackbar.LENGTH_LONG);
+        snackbar.setAction(context.getResources().getString(R.string.app_updater_update), new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                downloadTask = new DownloadTask(context,update1);
+                downloadTask.execute(update1.getDownloadUrl());
+
+            }
+        });
+        snackbar.show();
 
     }
 
@@ -324,7 +350,7 @@ public class AppUpdater {
         return result;
     }
 
-    private static class DownloadTask extends AsyncTask<String, Integer, String> {
+    public static class DownloadTask extends AsyncTask<String, Integer, String> {
 
         private WeakReference<Context> contextRef;
         private String app_name;
@@ -335,15 +361,9 @@ public class AppUpdater {
             this.contextRef = new WeakReference<>(context);
             this.app_name = update.getAsset_name();
             downloadDialog = new DownloadDialog(contextRef.get());
-            downloadDialog.setDownloadName(update.getAsset_name());
-            downloadDialog.setDownloadSize(update.getAsses_sizeMb()+"MB");
-            downloadDialog.setNegativeBtnListener(new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    cancel(true);
-                }
-            });
+            downloadDialog.setDownloadName(update.getAsset_name().replace(".apk",""));
+            downloadDialog.setDownloadSize(String.format(Locale.US,"%.2f MB",update.getAsses_sizeMb()));
+
         }
 
         @Override

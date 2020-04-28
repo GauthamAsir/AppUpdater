@@ -12,8 +12,6 @@ import androidx.annotation.NonNull;
 
 public class DownloadDialog extends AlertDialog {
 
-    private int progressBaPercent;
-    private DialogInterface.OnClickListener negativeBtnListener;
     private AlertDialog alertDialog;
     private TextView percent_pg, download_name, download_size;
     private ProgressBar progressBar;
@@ -36,9 +34,14 @@ public class DownloadDialog extends AlertDialog {
 
         progressBar.setMax(100);
         progressBar.setIndeterminate(false);
-        progressBar.setProgress(progressBaPercent);
 
-        builder.setNegativeButton("Cancel",negativeBtnListener);
+        builder.setNegativeButton("Cancel", new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                AppUpdater.downloadTask.cancel(true);
+                dialog.dismiss();
+            }
+        });
 
         alertDialog = builder.create();
 
@@ -58,10 +61,6 @@ public class DownloadDialog extends AlertDialog {
 
     void setProgressBaPercent(int progressBaPercent) {
         progressBar.setProgress(progressBaPercent);
-    }
-
-    void setNegativeBtnListener(OnClickListener negativeBtn) {
-        this.negativeBtnListener = negativeBtn;
     }
 
     public void show(){
