@@ -10,16 +10,18 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import a.gautham.library.async_tasks.DownloadTask;
+
 public class DownloadDialog extends AlertDialog {
 
     private AlertDialog alertDialog;
     private TextView percent_pg, download_name, download_size;
     private ProgressBar progressBar;
 
-    DownloadDialog(@NonNull Context context) {
+    public DownloadDialog(@NonNull Context context, DownloadTask downloadTask) {
         super(context);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.dialogAlertStyle);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(false);
 
         View view = LayoutInflater.from(context).inflate(R.layout.download_layout, null);
@@ -38,7 +40,7 @@ public class DownloadDialog extends AlertDialog {
         builder.setNegativeButton("Cancel", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                AppUpdater.downloadTask.cancel(true);
+                downloadTask.cancel(true);
                 dialog.dismiss();
             }
         });
@@ -47,19 +49,19 @@ public class DownloadDialog extends AlertDialog {
 
     }
 
-    void setDownloadName(String downloadName) {
+    public void setDownloadName(String downloadName) {
         download_name.setText(downloadName);
     }
 
-    void setDownloadSize(String downloadSize) {
+    public void setDownloadSize(String downloadSize) {
         download_size.setText(downloadSize);
     }
 
-    void setProgressPercent(String progressPercent) {
+    public void setProgressPercent(String progressPercent) {
         percent_pg.setText(progressPercent);
     }
 
-    void setProgressBaPercent(int progressBaPercent) {
+    public void setProgressBaPercent(int progressBaPercent) {
         progressBar.setProgress(progressBaPercent);
     }
 

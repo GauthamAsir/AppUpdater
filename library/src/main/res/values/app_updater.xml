@@ -11,4 +11,12 @@
     <string name="app_updater_download_error">Error Downloading </string>
     <string name="app_updater_update_downloaded">Update Downloaded</string>
     <string name="app_updater_downloading">Downloading</string>
+    <string name="app_updater_channel_name">App Updater Channel</string>
+    <string name="app_updater_channel_id">Gautham</string>
+    <string name="app_updater_update_msg_content">Update the app to get latest features, improvements and bug fixes.</string>
+    <string name="app_updater_check_updates">Checking For Update</string>
+    <string name="app_updater_changelog">Changelog</string>
+    <string name="app_updater_error">Error</string>
+    <string name="app_updater_failed">Failed</string>
+    <string name="app_updater_null_disply_msg">Display Mode Can\'t be Empty, Try Setting a display mode</string>
 </resources>

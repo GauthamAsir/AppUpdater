@@ -1,4 +1,4 @@
-package a.gautham.library;
+package a.gautham.library.helper;
 
 public enum Display {
     DIALOG,

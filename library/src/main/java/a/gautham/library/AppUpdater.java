@@ -2,56 +2,44 @@ package a.gautham.library;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.PowerManager;
+import android.media.RingtoneManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
-import androidx.core.content.FileProvider;
+import androidx.core.app.NotificationCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Locale;
-
-import a.gautham.library.helper.ServiceGenerator;
-import a.gautham.library.models.AssestsModel;
-import a.gautham.library.models.GitRelease;
+import a.gautham.library.async_tasks.DownloadTask;
+import a.gautham.library.async_tasks.UtilsAsync;
+import a.gautham.library.helper.Display;
 import a.gautham.library.models.Update;
-import a.gautham.library.service.GithubService;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class AppUpdater {
 
     private Context context;
     private String dialogTitle, dialogMessage, dialogBtnPositiveText, dialogBtnNegativeText, gitUsername, gitRepoName;
+    private String notificationTitle, notificationContent;
     private boolean dialogCancelable;
     private int dialogAlertStyle, dialog_icon;
     private UpdateListener updateListener;
     private UtilsAsync utilsAsync;
     private static final String TAG = "AppUpdater: ";
-    public static DownloadTask downloadTask;
+    private DownloadTask downloadTask;
     private Display display;
 
     public AppUpdater(Context context) {
         this.context = context;
+
+        //NOTIFICATION
+        this.notificationTitle = context.getString(R.string.app_updater_new_update_available);
+        this.notificationContent = context.getString(R.string.app_updater_update_msg_content);
 
         // DIALOG
         this.dialogTitle = context.getString(R.string.app_updater_new_update_available);
@@ -60,41 +48,38 @@ public class AppUpdater {
         this.dialogMessage = "";
         this.dialogCancelable = false;
         this.dialog_icon = R.drawable.ic_system_update;
-        this.dialogAlertStyle = R.style.dialogAlertStyle;
 
         this.updateListener = new UpdateListener() {
             @Override
             public void onSuccess(Update update, boolean isUpdateAvailable) {
                 if (isUpdateAvailable){
 
-                    switch (display){
-                        case DIALOG:
-                            showDialog(update);
-                            break;
-                        case SNACKBAR:
-                            showSnackBar(update);
-                            break;
-                        case NOTIFICATION:
-                            showNotification(update);
-                            break;
-                    }
+                    if (display!=null){
 
+                        switch (display){
+                            case DIALOG:
+                                showDialog(update);
+                                break;
+                            case SNACKBAR:
+                                showSnackBar(update);
+                                break;
+                            case NOTIFICATION:
+                                showNotification(context,update);
+                                break;
+                        }
+
+                    }else {
+                        Log.e(TAG,context.getString(R.string.app_updater_null_disply_msg));
+                    }
                 }
             }
 
             @Override
             public void onFailed(String error) {
-
+                Log.e(TAG,error);
             }
         };
 
-    }
-
-    public interface UpdateListener{
-
-        void onSuccess(Update update, boolean isUpdateAvailable);
-
-        void onFailed(String error);
     }
 
     public AppUpdater withListener(UpdateListener updateListener){
@@ -147,6 +132,14 @@ public class AppUpdater {
         this.display = display;
     }
 
+    public void setNotificationTitle(String notificationTitle) {
+        this.notificationTitle = notificationTitle;
+    }
+
+    public void setNotificationContent(String notificationContent) {
+        this.notificationContent = notificationContent;
+    }
+
     public void start(){
 
         utilsAsync = new UtilsAsync(context, gitUsername, gitRepoName, updateListener);
@@ -154,104 +147,44 @@ public class AppUpdater {
 
     }
 
-    static class UtilsAsync extends AsyncTask{
+    private void showNotification(Context context, Update update1) {
 
-        private WeakReference<Context> contextRef;
-        private String gitUsername, gitRepoName;
-        private UpdateListener updateListener;
-        private Update update1;
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
-        UtilsAsync(Context context, String gitUsername, String gitRepoName, UpdateListener updateListener) {
-            this.contextRef = new WeakReference<>(context);
-            this.gitUsername = gitUsername;
-            this.gitRepoName = gitRepoName;
-            this.updateListener = updateListener;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+            initNotificationChannel(context, notificationManager);
         }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context,
+                context.getString(R.string.app_updater_channel_id));
 
-            Context context = contextRef.get();
-            if (context == null || updateListener == null){
-                cancel(true);
-            }else if (isNetworkAvailable(context)){
-                if (!isGitHubValid(gitUsername, gitRepoName)){
-                    updateListener.onFailed(context.getString(R.string.app_updater_git_empty));
-                    cancel(true);
-                }
-            }else {
-                updateListener.onFailed(context.getString(R.string.app_updater_no_internet));
-                cancel(true);
-            }
+        //Intent intent = new Intent(context,UpdateActivity.class);
+        /*PendingIntent pendingIntent =
+                PendingIntent.getActivity(context, 0, intent, 0);*/
 
-        }
+        builder.setContentTitle(notificationTitle)
+                .setContentText(notificationContent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
+                .setSmallIcon(R.drawable.ic_system_update)
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(true);
 
-        @Override
-        protected Object doInBackground(Object[] objects) {
+        notificationManager = (NotificationManager)context.getSystemService(NOTIFICATION_SERVICE);
 
-            try {
-                Call<GitRelease> callAsync;
-                GithubService githubService = ServiceGenerator.build().create(GithubService.class);
-                callAsync = githubService.getReleases(gitUsername, gitRepoName);
+        assert notificationManager != null;
+        notificationManager.notify(1, builder.build());
 
-                callAsync.enqueue(new Callback<GitRelease>() {
-                    @Override
-                    public void onResponse(Call<GitRelease> call, Response<GitRelease> response) {
-
-                        if (response.code() == 200){
-
-                            GitRelease releases = response.body();
-                            AssestsModel assestsModel = releases.getAssestsModels().get(0);
-
-                            double size = assestsModel.getSize();
-                            double fileSizeInKB = size / 1024;
-                            double fileSizeInMB = fileSizeInKB / 1024;
-                            double fileSizeInGb = fileSizeInMB / 1024;
-
-                            Update update = new Update(assestsModel.getDownload_url(),
-                                    assestsModel.getAssest_name(),
-                                    releases.getRelease_title(),
-                                    releases.getRelease_description(),
-                                    releases.getRelease_tag_name(),
-                                    assestsModel.getDownload_count(),
-                                    assestsModel.getSize(), fileSizeInKB, fileSizeInMB, fileSizeInGb);
-                            update1 = update;
-
-                            double currentAppversion = Double.parseDouble(getAppVersion(contextRef.get()));
-                            double latestAppversion = Double.parseDouble(releases.getRelease_tag_name());
-
-                            updateListener.onSuccess(update,isUpdateAvailable(currentAppversion, latestAppversion));
-
-                        }else {
-                            updateListener.onFailed("Failed: " + response.message());
-                            cancel(true);
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<GitRelease> call, Throwable t) {
-                        Log.e(TAG + "Error: ",t.getMessage());
-                        updateListener.onFailed("Error: "+ t.getMessage());
-                        cancel(true);
-                    }
-                });
-
-            }catch (Exception e){
-                Log.e(TAG + "Failed: ",e.getMessage());
-                updateListener.onFailed("Failed: "+ e.getMessage());
-                cancel(true);
-            }
-
-            return null;
-        }
     }
 
-    private void showNotification(Update update1) {
-
-
-
+    private static void initNotificationChannel(Context context, NotificationManager notificationManager) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel mChannel = new NotificationChannel(
+                    context.getString(R.string.app_updater_channel_id),
+                    context.getString(R.string.app_updater_channel_name),
+                    NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(mChannel);
+        }
     }
 
     private void showSnackBar(Update update1) {
@@ -308,162 +241,6 @@ public class AppUpdater {
     public void stop(){
         if (utilsAsync != null && utilsAsync.isCancelled()){
             utilsAsync.cancel(true);
-        }
-    }
-
-    private static boolean isGitHubValid(String gitUsername, String gitRepoName) {
-
-        if (gitUsername == null || gitRepoName == null){
-            return false;
-        }else
-            return !gitUsername.isEmpty() && !gitRepoName.isEmpty() && gitUsername.length() != 0 && gitRepoName.length() != 0;
-    }
-
-    private static boolean isUpdateAvailable(double currentAppversion, double latestAppversion){
-
-        return currentAppversion < latestAppversion;
-    }
-
-    static Boolean isNetworkAvailable(Context context) {
-        Boolean res = false;
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-            if (networkInfo != null) {
-                res = networkInfo.isConnected();
-            }
-        }
-
-        return res;
-    }
-
-    private static String getAppVersion(Context context){
-
-        String result = "";
-        try {
-            result = context.getPackageManager().getPackageInfo(context.getPackageName(),0)
-                    .versionName;
-            result = result.replaceAll("[a-zA-Z]|-","");
-        }catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    public static class DownloadTask extends AsyncTask<String, Integer, String> {
-
-        private WeakReference<Context> contextRef;
-        private String app_name;
-        private PowerManager.WakeLock mWakeLock;
-        private DownloadDialog downloadDialog;
-
-        DownloadTask(Context context, Update update) {
-            this.contextRef = new WeakReference<>(context);
-            this.app_name = update.getAsset_name();
-            downloadDialog = new DownloadDialog(contextRef.get());
-            downloadDialog.setDownloadName(update.getAsset_name().replace(".apk",""));
-            downloadDialog.setDownloadSize(String.format(Locale.US,"%.2f MB",update.getAsses_sizeMb()));
-
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            PowerManager pm = (PowerManager) contextRef.get().getSystemService(Context.POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                    getClass().getName());
-            mWakeLock.acquire();
-            downloadDialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... sUrl) {
-            InputStream input = null;
-            OutputStream output = null;
-            HttpURLConnection connection = null;
-
-            try {
-                URL url = new URL(sUrl[0]);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-
-                // expect HTTP 200 OK, so we don't mistakenly save error report
-                // instead of the file
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    return "Server returned HTTP " + connection.getResponseCode()
-                            + " " + connection.getResponseMessage();
-                }
-
-                // this will be useful to display download percentage
-                // might be -1: server did not report the length
-                int fileLength = connection.getContentLength();
-
-                // download the file
-                input = connection.getInputStream();
-                output = new FileOutputStream(contextRef.get().getExternalFilesDir(null).getAbsolutePath() + "/"+app_name);
-
-                byte[] data = new byte[4096];
-                long total = 0;
-                int count;
-                while ((count = input.read(data)) != -1) {
-                    // allow canceling with back button
-                    if (isCancelled()) {
-                        input.close();
-                        return null;
-                    }
-                    total += count;
-                    // publishing the progress....
-                    if (fileLength > 0) // only if total length is known
-                        publishProgress((int) (total * 100 / fileLength));
-                    output.write(data, 0, count);
-
-                }
-            } catch (Exception e) {
-                return e.toString();
-            } finally {
-                try {
-                    if (output != null)
-                        output.close();
-                    if (input != null)
-                        input.close();
-                } catch (IOException ignored) {
-                }
-
-                if (connection != null)
-                    connection.disconnect();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-
-            downloadDialog.setProgressPercent(progress[0] + "%");
-            downloadDialog.setProgressBaPercent(progress[0]);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            mWakeLock.release();
-            downloadDialog.hide();
-            if (result != null){
-                Toast.makeText(contextRef.get(),R.string.app_updater_download_error+result, Toast.LENGTH_LONG).show();
-            }
-            else{
-
-                Toast.makeText(contextRef.get(),R.string.app_updater_update_downloaded, Toast.LENGTH_SHORT).show();
-
-                File file = new File(contextRef.get().getExternalFilesDir(null).getAbsolutePath()
-                        + "/" + app_name);
-                Uri data = FileProvider.getUriForFile(contextRef.get(), contextRef.get().getPackageName() +".provider",file);
-
-                Intent installAPK = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-                installAPK.setDataAndType(data,"application/vnd.android.package-archive");
-                installAPK.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                contextRef.get().startActivity(installAPK);
-            }
         }
     }
 

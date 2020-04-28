@@ -17,5 +17,7 @@
                 android:resource="@xml/filepaths"/>
         </provider>
 
+        <activity android:name="a.gautham.library.UpdateActivity" android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"/>
+
     </application>
 </manifest>

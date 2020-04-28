@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/c1"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:orientation="vertical"
+            android:background="@color/colorPrimaryDark"
+            android:gravity="center">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/icon_update"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/ic_system_update"
+                    android:tint="@android:color/white"
+                    android:layout_marginEnd="12dp"
+                    android:layout_marginStart="12dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/header1"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:text="@string/app_updater"
+                        app:autoSizeTextType="uniform"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:layout_marginBottom="12dp"
+                        android:textColor="@android:color/white"/>
+
+                    <TextView
+                        android:id="@+id/header2"
+                        android:layout_width="match_parent"
+                        android:layout_height="25dp"
+                        android:text="@string/app_updater_check_updates"
+                        app:autoSizeTextType="uniform"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView_user"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            app:layout_anchor="@id/c1"
+            android:layout_gravity="bottom"
+            app:layout_anchorGravity="bottom"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="6dp">
+
+                <TextView
+                    android:id="@+id/changelogs_txt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="21sp"
+                    android:padding="12dp"
+                    android:text="@string/app_updater_changelog"
+                    android:layout_margin="6dp"/>
+
+                <TextView
+                    android:id="@+id/changelogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_updater_changelog"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:layout_margin="6dp"
+                    android:lineSpacingExtra="10dp"/>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/update_bt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:layout_margin="12dp"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:textColor="@android:color/white"
+        style="@android:style/TextAppearance.Medium"
+        android:text="@string/app_updater_update"/>
+
+    <ImageView
+        android:id="@+id/update_refresh"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_refresh"
+        android:tint="@android:color/white"
+        android:background="@drawable/circle_background"
+        android:padding="8dp"
+        android:layout_margin="12dp"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/c1"
+        app:layout_anchor="@id/c1"
+        app:layout_anchorGravity="bottom|end"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
