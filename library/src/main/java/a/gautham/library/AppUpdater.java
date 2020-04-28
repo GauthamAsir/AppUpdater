@@ -232,13 +232,6 @@ public class AppUpdater {
 
             return null;
         }
-
-        @Override
-        protected void onPostExecute(Object o) {
-            super.onPostExecute(o);
-
-
-        }
     }
 
     private void showNotification(Update update1) {
