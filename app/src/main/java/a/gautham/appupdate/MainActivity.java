@@ -1,12 +1,11 @@
 package a.gautham.appupdate;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import a.gautham.library.AppUpdater;
-import a.gautham.library.UpdateActivity;
+import a.gautham.library.helper.Display;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,20 +16,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Intent updateIntent = new Intent(getApplicationContext(),UpdateActivity.class);
+        /*Intent updateIntent = new Intent(getApplicationContext(),UpdateActivity.class);
         updateIntent.putExtra("username","GauthamAsir");
         updateIntent.putExtra("repoName","WhatsApp_Status_Saver");
-        startActivity(updateIntent);
+        startActivity(updateIntent);*/
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        /*appUpdater = new AppUpdater(this);
-        appUpdater.setDisplay(Display.DIALOG);
+        appUpdater = new AppUpdater(this);
+        appUpdater.setDisplay(Display.NOTIFICATION);
         appUpdater.setUpGithub("GauthamAsir","WhatsApp_Status_Saver");
-        appUpdater.start();*/
+        appUpdater.start();
     }
 
     @Override

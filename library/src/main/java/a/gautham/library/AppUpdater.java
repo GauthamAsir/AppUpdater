@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.media.RingtoneManager;
 import android.util.Log;
 import android.view.View;
@@ -64,7 +66,7 @@ public class AppUpdater {
                                 showSnackBar(update);
                                 break;
                             case NOTIFICATION:
-                                showNotification(context,update);
+                                showNotification(context);
                                 break;
                         }
 
@@ -147,7 +149,7 @@ public class AppUpdater {
 
     }
 
-    private void showNotification(Context context, Update update1) {
+    private void showNotification(Context context) {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
@@ -158,12 +160,15 @@ public class AppUpdater {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context,
                 context.getString(R.string.app_updater_channel_id));
 
-        //Intent intent = new Intent(context,UpdateActivity.class);
-        /*PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 0, intent, 0);*/
+        Intent intent = new Intent(context,UpdateActivity.class);
+        intent.putExtra("username",gitUsername);
+        intent.putExtra("repoName",gitRepoName);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         builder.setContentTitle(notificationTitle)
                 .setContentText(notificationContent)
+                .setContentIntent(pendingIntent)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setSmallIcon(R.drawable.ic_system_update)
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
